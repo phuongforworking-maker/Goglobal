@@ -135,18 +135,7 @@ const FloatingWidget = ({
     transition: `color ${ANIMATION.DEFAULT}`,
   };
 
-  const redDotStyle = {
-    position: 'absolute',
-    top: '-4px',
-    right: '-4px',
-    width: '12px',
-    height: '12px',
-    backgroundColor: COLORS.ERROR,
-    borderRadius: BORDER_RADIUS.CIRCLE,
-    border: `1px solid ${COLORS.TEXT_LIGHT}`,
-    animation: 'pulse 2s infinite',
-    boxShadow: `0 0 8px ${COLORS.ERROR}66`,
-  };
+
 
   return (
     <>
@@ -164,7 +153,7 @@ const FloatingWidget = ({
           }
         `}
       </style>
-      <div ref={widgetRef} style={widgetStyle}>
+      <div ref={widgetRef} style={widgetStyle} className="floating-widget">
         {/* Main Globe Button */}
         <button 
           className="globe-button"
@@ -174,7 +163,7 @@ const FloatingWidget = ({
         >
           🌍
           {/* Red dot indicator for listening state */}
-          {isListening && <div style={redDotStyle} />}
+          {isListening && <div className="red-dot" />}
         </button>
 
         {/* Menu Popup */}

@@ -116,7 +116,7 @@ const LiveTranscriptPopup = ({
           }
         `}
       </style>
-      <div style={popupStyle}>
+  <div className="transcript-popup" style={popupStyle}>
         {/* Header with status indicator */}
         <div style={headerStyle}>
           <div style={pulseDotStyle} />

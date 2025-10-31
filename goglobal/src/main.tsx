@@ -5,7 +5,7 @@ import './index.css';
 // Figma-derived styles (lightweight augmentations)
 import './figma.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ModernApp />
   </React.StrictMode>,

@@ -15,17 +15,11 @@ import {
   speakText 
 } from './services/apiService';
 
-// List of supported language codes
-const availableLanguages = [
-  { code: 'en', name: 'English', spokenCode: 'en-US' },
-  { code: 'es', name: 'Spanish', spokenCode: 'es-ES' },
-  { code: 'fr', name: 'French', spokenCode: 'fr-FR' },
-  { code: 'de', name: 'German', spokenCode: 'de-DE' },
-  { code: 'zh', name: 'Mandarin', spokenCode: 'zh-CN' }, 
-  { code: 'ko', name: 'Korean', spokenCode: 'ko-KR' },  
-  { code: 'ja', name: 'Japanese', spokenCode: 'ja-JP' },
-  { code: 'vi', name: 'Vietnamese', spokenCode: 'vi-VN' },
-];
+// Import comprehensive language support
+import { AZURE_SUPPORTED_LANGUAGES, POPULAR_LANGUAGES, LANGUAGE_REGIONS } from './constants/languages';
+
+// Use the comprehensive list of supported languages (100+ languages)
+const availableLanguages = AZURE_SUPPORTED_LANGUAGES;
 
 const ModernApp = () => {
   // UI State

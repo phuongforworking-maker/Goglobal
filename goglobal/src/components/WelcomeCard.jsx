@@ -108,7 +108,7 @@ const WelcomeCard = ({ isVisible = true, onDismiss, autoHideAfter = 10000 }) => 
           }
         `}
       </style>
-      <div style={cardStyle}>
+  <div className="welcome-card" style={cardStyle}>
         {/* Dismiss button */}
         <button 
           style={dismissButtonStyle}
@@ -132,25 +132,21 @@ const WelcomeCard = ({ isVisible = true, onDismiss, autoHideAfter = 10000 }) => 
         </h1>
         
         <p style={descriptionStyle}>
-          Your floating language assistant. The widget can be dragged anywhere on your screen and will remember its position.
+          Your Language Assistant. Move the widget where you like it to be.
         </p>
         
         <div style={featureListStyle}>
-          <div style={featureItemStyle}>
-            <span style={{...iconStyle, color: COLORS.PRIMARY_BLUE}}>⚙️</span>
-            <span>Settings: Configure output language and modes</span>
-          </div>
-          <div style={featureItemStyle}>
-            <span style={{...iconStyle, color: COLORS.ACCENT_ORANGE}}>📝</span>
-            <span>Notes: Record and summarize meetings</span>
-          </div>
           <div style={featureItemStyle}>
             <span style={{...iconStyle, color: COLORS.SUCCESS}}>🌍</span>
             <span>Live Translation: Real-time speech translation</span>
           </div>
           <div style={featureItemStyle}>
-            <span style={{...iconStyle, color: COLORS.PRIMARY_BLUE}}>🎯</span>
-            <span>Drag the globe icon to move it anywhere</span>
+            <span style={{...iconStyle, color: COLORS.PRIMARY_BLUE}}>⚙️</span>
+            <span>Settings: Choose your primary language</span>
+          </div>
+          <div style={featureItemStyle}>
+            <span style={{...iconStyle, color: COLORS.ACCENT_ORANGE}}>📝</span>
+            <span>Notes: Record and summarize meetings</span>
           </div>
         </div>
       </div>

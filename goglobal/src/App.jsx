@@ -1,13 +1,11 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import GoglobalWidget from './components/GoglobalWidget'; 
-import LiveSpeechInput from './components/LiveSpeechInput'; 
-import SubtitleBar from './components/SubtitleBar'; 
-import { 
-  detectAndTranslate, 
-  getClarificationPrompt, 
-  getMeetingSummary, 
-  speakText 
-} from './services/apiService'; 
+import React, { useState, useEffect } from 'react';
+import { FloatingWidget } from './components/FloatingWidget';
+import { SettingsPanel } from './components/SettingsPanel';
+import { NotesPanel } from './components/NotesPanel';
+import { TranscriptPopup } from './components/TranscriptPopup';
+import { SubtitleDisplay } from './components/SubtitleDisplay';
+import { SubtitleAdjustment } from './components/SubtitleAdjustment';
+import { MeetingSummary } from './components/MeetingSummary';
 
 // Define unique brand colors 
 const COLORS = {
@@ -19,17 +17,8 @@ const COLORS = {
   TEXT_LIGHT: '#ffffff', // White text on dark background
 };
 
-// List of supported language codes
-const availableLanguages = [
-    { code: 'en', name: 'English', spokenCode: 'en-US' },
-    { code: 'es', name: 'Spanish', spokenCode: 'es-ES' },
-    { code: 'fr', name: 'French', spokenCode: 'fr-FR' },
-    { code: 'de', name: 'German', spokenCode: 'de-DE' },
-    { code: 'zh', name: 'Mandarin', spokenCode: 'zh-CN' }, 
-    { code: 'ko', name: 'Korean', spokenCode: 'ko-KR' },  
-    { code: 'ja', name: 'Japanese', spokenCode: 'ja-JP' },
-    { code: 'vi', name: 'Vietnamese', spokenCode: 'vi-VN' },
-];
+// Use comprehensive list of supported language codes (100+ languages)
+const availableLanguages = AZURE_SUPPORTED_LANGUAGES;
 
 // --- Output Language Settings Panel ---
 const OutputLanguagePanel = ({ 
@@ -195,15 +184,83 @@ const MeetingSummarizer = ({ fullTranscript, targetLangCode, onTranscript }) => 
 
 
 function App() {
-  const [translatedText, setTranslatedText] = useState('Translation will appear here.');
-  const [targetLangCode, setTargetLangCode] = useState('es'); 
-  const [activeFeature, setActiveFeature] = useState(null); 
-  const [isSubtitleOn, setIsSubtitleOn] = useState(false); // Subtitle OFF by default
-  const [isDubbingOn, setIsDubbingOn] = useState(false); // Dubbing OFF by default
-  const [fullTranscript, setFullTranscript] = useState(''); 
-  const [availableVoices, setAvailableVoices] = useState([]); 
-  const [selectedVoiceURI, setSelectedVoiceURI] = useState(null); 
-  const [dialogueHistory, setDialogueHistory] = useState([]); 
+    // State lifted from the user's Figma-alike App
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isNotesOpen, setIsNotesOpen] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const [isLiveTranslationEnabled, setIsLiveTranslationEnabled] = useState(false);
+    const [isResizingSubtitle, setIsResizingSubtitle] = useState(false);
+    const [isAdjustMode, setIsAdjustMode] = useState(false);
+    const [showMeetingSummary, setShowMeetingSummary] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(true);
+
+    // Function to calculate responsive subtitle dimensions
+    const getResponsiveSubtitleSize = () => {
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const isMobile = screenWidth < 768;
+
+        if (isMobile) {
+            const width = screenWidth - 32; // 16px padding each side
+            const height = Math.min(100, screenHeight * 0.15);
+            return { width, height };
+        } else {
+            return { width: 600, height: 80 };
+        }
+    };
+
+    const getResponsiveSubtitlePosition = (size) => {
+        const screenWidth = window.innerWidth;
+        const isMobile = screenWidth < 768;
+        if (isMobile) {
+            const x = (screenWidth - size.width) / 2;
+            const y = 80;
+            return { x, y };
+        } else {
+            return { x: 100, y: 120 };
+        }
+    };
+
+    const initialSize = getResponsiveSubtitleSize();
+    const initialPosition = getResponsiveSubtitlePosition(initialSize);
+
+    const [subtitleSettings, setSubtitleSettings] = useState({
+        enabled: false,
+        size: 'medium',
+        color: '#FFFFFF',
+        backgroundColor: '#000000',
+        text: 'Hola, ¿cómo está? This is an example of a translated subtitle preview.'
+    });
+
+    const [subtitlePosition, setSubtitlePosition] = useState(initialPosition);
+    const [subtitleSize, setSubtitleSize] = useState(initialSize);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const newSize = getResponsiveSubtitleSize();
+            const newPosition = getResponsiveSubtitlePosition(newSize);
+            if (subtitleSettings.enabled || isAdjustMode) {
+                setSubtitleSize(newSize);
+                setSubtitlePosition(newPosition);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
+        };
+    }, [subtitleSettings.enabled, isAdjustMode]);
+
+    const handleSettingsClick = () => setIsSettingsOpen(true);
+    const handleNotesClick = () => setIsNotesOpen(true);
+    const handleLiveTranslationToggle = (enabled) => {
+        if (isLiveTranslationEnabled && !enabled) setShowMeetingSummary(true);
+        setIsLiveTranslationEnabled(enabled);
+    };
+
+    const updateSubtitleSettings = (updates) => setSubtitleSettings(prev => ({ ...prev, ...updates }));
+    const handleAdjustModeApply = () => { setIsAdjustMode(false); setIsSettingsOpen(true); };
 
   // --- Voice Loader useEffect (Loads voices when component mounts) ---
   useEffect(() => {
@@ -337,4 +394,210 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isNotesOpen, setIsNotesOpen] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const [isLiveTranslationEnabled, setIsLiveTranslationEnabled] = useState(false);
+    const [isResizingSubtitle, setIsResizingSubtitle] = useState(false);
+    const [isAdjustMode, setIsAdjustMode] = useState(false);
+    const [showMeetingSummary, setShowMeetingSummary] = useState(false);
+    const [showWelcome, setShowWelcome] = useState(true);
+  
+    // Function to calculate responsive subtitle dimensions
+    const getResponsiveSubtitleSize = () => {
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const isMobile = screenWidth < 768;
+    
+        if (isMobile) {
+            // Mobile: fit the screen width with padding
+            const width = screenWidth - 32; // 16px padding on each side
+            const height = Math.min(100, screenHeight * 0.15); // 15% of screen height, max 100px
+            return { width, height };
+        } else {
+            // Desktop: fixed size
+            return { width: 600, height: 80 };
+        }
+    };
+
+    // Function to calculate centered position
+    const getResponsiveSubtitlePosition = (size) => {
+        const screenWidth = window.innerWidth;
+        const isMobile = screenWidth < 768;
+    
+        if (isMobile) {
+            // Mobile: center horizontally, position near bottom
+            const x = (screenWidth - size.width) / 2;
+            const y = 80; // 80px from bottom
+            return { x, y };
+        } else {
+            // Desktop: default position
+            return { x: 100, y: 120 };
+        }
+    };
+
+    // Initialize with responsive values
+    const initialSize = getResponsiveSubtitleSize();
+    const initialPosition = getResponsiveSubtitlePosition(initialSize);
+
+    // Subtitle settings
+    const [subtitleSettings, setSubtitleSettings] = useState({
+        enabled: false,
+        size: 'medium',
+        color: '#FFFFFF',
+        backgroundColor: '#000000',
+        text: 'Hola, ¿cómo está? This is an example of a translated subtitle preview.'
+    });
+
+    // Subtitle position and size - shared between adjustment and display
+    const [subtitlePosition, setSubtitlePosition] = useState(initialPosition);
+    const [subtitleSize, setSubtitleSize] = useState(initialSize);
+
+    // Handle screen resize and orientation change
+    useEffect(() => {
+        const handleResize = () => {
+            const newSize = getResponsiveSubtitleSize();
+            const newPosition = getResponsiveSubtitlePosition(newSize);
+      
+            // Only auto-adjust if subtitle is enabled or in adjust mode
+            if (subtitleSettings.enabled || isAdjustMode) {
+                setSubtitleSize(newSize);
+                setSubtitlePosition(newPosition);
+            }
+        };
+
+        // Listen for both resize and orientation change
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
+        };
+    }, [subtitleSettings.enabled, isAdjustMode]);
+
+    const handleSettingsClick = () => {
+        setIsSettingsOpen(true);
+    };
+
+    const handleNotesClick = () => {
+        setIsNotesOpen(true);
+    };
+
+    const handleLiveTranslationToggle = (enabled) => {
+        // If turning off live translation, show meeting summary
+        if (isLiveTranslationEnabled && !enabled) {
+            setShowMeetingSummary(true);
+        }
+        setIsLiveTranslationEnabled(enabled);
+    };
+
+    const updateSubtitleSettings = (updates) => {
+        setSubtitleSettings(prev => ({ ...prev, ...updates }));
+    };
+
+    const handleAdjustModeApply = () => {
+        setIsAdjustMode(false);
+        setIsSettingsOpen(true);
+    };
+
+    return (
+        <div className="min-h-screen bg-[#333333] text-white p-8">
+            {/* Welcome Card */}
+            {showWelcome && (
+                <div 
+                    className="fixed top-8 left-8 max-w-md bg-white rounded-lg shadow-lg p-6 text-gray-800 border border-gray-200 transition-opacity duration-200 z-10"
+                    style={{ opacity: isResizingSubtitle ? 0.2 : 1 }}
+                >
+                    <div className="flex items-start justify-between mb-2">
+                        <h1 className="text-blue-600">Welcome to Goglobal</h1>
+                        <button
+                            onClick={() => setShowWelcome(false)}
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-4">
+                        Your floating language assistant. The widget can be dragged anywhere on your screen.
+                    </p>
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span className="text-blue-600">⚙️</span>
+                            <span>Settings: Configure output language and modes</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span className="text-orange-500">📝</span>
+                            <span>Notes: Record and summarize meetings</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Floating Widget */}
+            <FloatingWidget
+                onSettingsClick={handleSettingsClick}
+                onNotesClick={handleNotesClick}
+                isListening={isListening}
+                isLiveTranslationEnabled={isLiveTranslationEnabled}
+            />
+
+            {/* Settings Panel */}
+            <SettingsPanel 
+                isOpen={isSettingsOpen && !isAdjustMode} 
+                onClose={() => setIsSettingsOpen(false)}
+                subtitleSettings={subtitleSettings}
+                onSubtitleSettingsChange={updateSubtitleSettings}
+                onResizingChange={setIsResizingSubtitle}
+                isAdjustMode={isAdjustMode}
+                onAdjustModeChange={setIsAdjustMode}
+            />
+
+            {/* Notes Panel */}
+            <NotesPanel 
+                isOpen={isNotesOpen} 
+                onClose={() => setIsNotesOpen(false)} 
+            />
+
+            {/* Transcript Popup */}
+            <TranscriptPopup 
+                isVisible={isListening}
+                isEnabled={isLiveTranslationEnabled}
+                onToggle={handleLiveTranslationToggle}
+            />
+
+            {/* Subtitle Display */}
+            <SubtitleDisplay 
+                settings={subtitleSettings}
+                isVisible={subtitleSettings.enabled && isLiveTranslationEnabled && !isAdjustMode}
+                position={subtitlePosition}
+                size={subtitleSize}
+                onPositionChange={setSubtitlePosition}
+                onSizeChange={setSubtitleSize}
+            />
+
+            {/* Subtitle Adjustment Mode */}
+            <SubtitleAdjustment
+                isAdjustMode={isAdjustMode}
+                color={subtitleSettings.color}
+                backgroundColor={subtitleSettings.backgroundColor}
+                position={subtitlePosition}
+                size={subtitleSize}
+                onColorChange={(color) => updateSubtitleSettings({ color })}
+                onBackgroundColorChange={(backgroundColor) => updateSubtitleSettings({ backgroundColor })}
+                onPositionChange={setSubtitlePosition}
+                onSizeChange={setSubtitleSize}
+                onApply={handleAdjustModeApply}
+            />
+
+            {/* Meeting Summary */}
+            <MeetingSummary
+                isVisible={showMeetingSummary}
+                onClose={() => setShowMeetingSummary(false)}
+            />
+        </div>
+    );
+}

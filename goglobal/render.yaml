@@ -1,0 +1,32 @@
+# Render manifest for goglobal (static site)
+# This manifest defines a static site that builds with Vite and publishes the `dist` folder.
+# NOTE: Do NOT place secret values in this file. Add secrets in the Render dashboard (Project > Environment).
+
+services:
+  - type: static
+    name: goglobal-static
+    env: node
+    branch: main
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    plan: free
+    # Environment variables (set these in the Render dashboard, not here):
+    # VITE_AZURE_TRANSLATOR_KEY
+    # VITE_AZURE_REGION
+    # VITE_PROMPT_API_KEY
+    # VITE_SUMMARIZER_API_KEY
+  - type: web
+    name: goglobal-api
+    env: node
+    branch: main
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:server
+    envVars:
+      # Set these on Render (do NOT put secrets in this file)
+      # AZURE_TRANSLATOR_KEY: ''
+      # AZURE_REGION: ''
+      # PROMPT_API_KEY: ''
+      # SUMMARIZER_API_KEY: ''
+      # AZURE_SPEECH_KEY: ''
+      # AZURE_SPEECH_REGION: ''

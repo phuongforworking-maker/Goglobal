@@ -2,6 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LiveSpeechInput from './LiveSpeechInput';
+import { AZURE_SUPPORTED_LANGUAGES } from '../constants/languages';
 
 export default function NotesPanel({ 
   isOpen, 
@@ -14,16 +15,7 @@ export default function NotesPanel({
   summaryError,
   onGenerateSummary
 }) {
-  const availableLanguages = [
-    { code: 'en', name: 'English', spokenCode: 'en-US' },
-    { code: 'es', name: 'Spanish', spokenCode: 'es-ES' },
-    { code: 'fr', name: 'French', spokenCode: 'fr-FR' },
-    { code: 'de', name: 'German', spokenCode: 'de-DE' },
-    { code: 'zh', name: 'Mandarin', spokenCode: 'zh-CN' }, 
-    { code: 'ko', name: 'Korean', spokenCode: 'ko-KR' },  
-    { code: 'ja', name: 'Japanese', spokenCode: 'ja-JP' },
-    { code: 'vi', name: 'Vietnamese', spokenCode: 'vi-VN' },
-  ];
+  const availableLanguages = AZURE_SUPPORTED_LANGUAGES;
 
   const summaryLanguageName = availableLanguages.find(l => l.code === targetLangCode)?.name || 'English';
 
@@ -37,7 +29,7 @@ export default function NotesPanel({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/30 z-40"
+            className="panel-overlay fixed inset-0 bg-black/30 z-40"
           />
 
           {/* Panel - Made smaller (4/5 size) */}
@@ -46,7 +38,7 @@ export default function NotesPanel({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-50 w-full max-w-sm p-5"
+            className={"panel fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-50 w-full max-w-sm p-5"}
           >
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-gray-200 mb-4">
