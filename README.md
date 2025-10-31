@@ -1,23 +1,24 @@
 # Goglobal
+
 Goglobal transforms Google Meet &amp; WebRTC with real-time AI that speaks your language. It clarifies meaning, adapts to domain glossaries, and learns from peer feedback for perfect context.
 
-**Testing Instructions (For the Judges)** 
+**Testing Instructions (For the Judges)**
 
 Setup: Configure My Experience
 
 1. Launch Agent: Click the floating Globe Button in the corner.
-   
+
 2. Go to Setup: Click the Voice Icon (Microphone/Headset).
 
 3. Set Primary Language: In the Target Language dropdown, select a non-English language (e.g., Spanish).
-  
+
 4. Enable Dubbing: Check the box next to Audio Dubbing (Dub). (The voice selector should appear).
-  
+
 5. Enable Subtitles: Check the box next to Subtitle Display (Sub).
 
-## Test 1: Automatic Detection & Dual Output 
+## Test 1: Automatic Detection & Dual Output
 
-_This proves the system can detect an unknown language and deliver both audio and text output to my chosen language (Spanish)._
+_This proves the system can detect an unknown language and deliver both audio and text output to my chosen language (Spanish)._ 
 
 1. Start the Microphone inside the panel.
 
@@ -42,3 +43,4 @@ Expected Result: The phrase is transcribed into the full conversation log (for s
 3. Click the Generate Summary button.
 
 Expected Result: A concise, AI-generated summary of the conversation history (including the Spanish translations and English transcripts) appears, written entirely in Spanish.
+=======

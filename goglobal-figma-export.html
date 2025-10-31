@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goglobal - HTML for Figma</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Your existing CSS variables */
+        :root {
+            --bg-primary: #333333;
+            --card-bg: #ffffff;
+            --primary-blue: #007bff;
+            --accent-orange: #ff9800;
+            --text-dark: #333333;
+            --text-light: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-light);
+        }
+
+        /* Floating Widget Styles */
+        .floating-widget {
+            position: fixed;
+            left: 50px;
+            top: 50px;
+            z-index: 9999;
+            cursor: grab;
+        }
+
+        .globe-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .globe-button:hover {
+            transform: scale(1.05);
+        }
+
+        .globe-button.listening {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .red-dot {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 12px;
+            height: 12px;
+            background-color: #ff4444;
+            border-radius: 50%;
+            border: 1px solid white;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
+        }
+
+        .menu-popup {
+            position: absolute;
+            top: -64px;
+            left: 0;
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            padding: 12px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .menu-button {
+            color: white;
+            background: none;
+            border: none;
+            padding: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .menu-button:hover {
+            color: #60a5fa;
+        }
+
+        /* Panel Styles */
+        .panel-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 30;
+        }
+
+        .panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            z-index: 40;
+            min-width: 350px;
+            max-width: 420px;
+            color: var(--text-dark);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            color: #6b7280;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-button:hover {
+            background: #f3f4f6;
+            color: var(--text-dark);
+        }
+
+        /* Live Transcript Popup */
+        .transcript-popup {
+            position: fixed;
+            bottom: 96px;
+            right: 24px;
+            background: rgba(31, 41, 55, 0.9);
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            max-width: 320px;
+            width: 320px;
+            font-size: 14px;
+            max-height: 192px;
+            overflow-y: auto;
+        }
+
+        .transcript-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #93c5fd;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #34d399;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Welcome Message */
+        .welcome-card {
+            position: fixed;
+            top: 32px;
+            left: 32px;
+            max-width: 384px;
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            color: var(--text-dark);
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main App Container -->
+    <div id="app" style="min-height: 100vh; padding: 32px; position: relative;">
+        
+        <!-- Welcome Card -->
+        <div class="welcome-card">
+            <h1 style="font-size: 20px; font-weight: bold; color: var(--primary-blue); margin: 0 0 8px 0;">
+                Welcome to Goglobal
+            </h1>
+            <p style="font-size: 14px; color: #6b7280; margin: 0 0 12px 0;">
+                Your floating language assistant. The widget can be dragged anywhere on your screen and will remember its position.
+            </p>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <i class="fa fa-cog" style="color: var(--primary-blue);"></i>
+                    <span>Settings: Configure output language and modes</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fa fa-book" style="color: var(--accent-orange);"></i>
+                    <span>Notes: Record and summarize meetings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Widget -->
+        <div class="floating-widget">
+            <!-- Main Globe Button -->
+            <button class="globe-button" id="globeButton">
+                🌍
+                <!-- Red dot indicator (hidden by default) -->
+                <div class="red-dot" id="redDot" style="display: none;"></div>
+            </button>
+
+            <!-- Menu Popup (hidden by default) -->
+            <div class="menu-popup" id="menuPopup" style="display: none;">
+                <button class="menu-button" id="settingsBtn" title="Output Language Settings">
+                    ⚙️
+                </button>
+                <button class="menu-button" id="notesBtn" title="Meeting Notes">
+                    📝
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Panel (hidden by default) -->
+        <div class="panel-overlay" id="panelOverlay" style="display: none;">
+            <div class="panel" id="settingsPanel">
+                <div class="panel-header">
+                    <h2 style="font-size: 18px; font-weight: bold; color: var(--primary-blue); margin: 0;">
+                        Output Language Settings
+                    </h2>
+                    <button class="close-button" id="closePanel">&times;</button>
+                </div>
+                
+                <div style="space-y: 16px;">
+                    <!-- Language Selection -->
+                    <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
+                        <label style="font-size: 14px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Your Primary Language
+                        </label>
+                        <p style="font-size: 12px; color: #6b7280; margin: 0 0 12px 0;">
+                            Any language spoken will be automatically translated to this language
+                        </p>
+                        <select style="padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #f9fafb; width: 100%; font-size: 16px;">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="zh">Mandarin</option>
+                            <option value="ko">Korean</option>
+                            <option value="ja">Japanese</option>
+                            <option value="vi">Vietnamese</option>
+                        </select>
+                    </div>
+
+                    <!-- Output Mode Toggles -->
+                    <div style="display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
+                        <p style="font-size: 16px; font-weight: 600; color: #111827; margin: 0;">Output Mode:</p>
+                        
+                        <!-- Subtitle Toggle -->
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                            <input type="checkbox" style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="color: #111827; font-weight: 600; font-size: 16px;">Subtitle Display (Sub)</div>
+                                <div style="font-size: 14px; color: #6b7280;">Show translations as text at the bottom.</div>
+                            </div>
+                        </label>
+
+                        <!-- Dub Toggle -->
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                            <input type="checkbox" style="width: 20px; height: 20px;">
+                            <div>
+                                <div style="color: #111827; font-weight: 600; font-size: 16px;">Audio Dubbing (Dub)</div>
+                                <div style="font-size: 14px; color: #6b7280;">Hear translations spoken in your language.</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Voice Selector -->
+                    <div>
+                        <label style="font-size: 14px; font-weight: 600; color: #374151; display: block; margin-bottom: 8px;">
+                            Voice for English Dubbing
+                        </label>
+                        <select style="padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: #f9fafb; width: 100%; font-size: 16px;">
+                            <option value="">-- Best Available Voice --</option>
+                            <option value="voice1">Microsoft David (Local)</option>
+                            <option value="voice2">Google US English (Cloud)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meeting Notes Panel (hidden by default) -->
+        <div class="panel" id="notesPanel" style="display: none;">
+            <div class="panel-header">
+                <h2 style="font-size: 18px; font-weight: bold; color: var(--primary-blue); margin: 0;">
+                    Meeting Notes
+                </h2>
+                <button class="close-button">&times;</button>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Recording Controls -->
+                <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;">
+                    <h4 style="font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 12px 0;">Record Meeting</h4>
+                    <button style="background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 50px; font-weight: 600; cursor: pointer;">
+                        START
+                    </button>
+                </div>
+                
+                <!-- Transcript Area -->
+                <textarea 
+                    style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; resize: vertical;" 
+                    rows="5" 
+                    placeholder="Meeting transcript will appear here as you speak..."
+                    readonly>
+                </textarea>
+                
+                <!-- Generate Summary Button -->
+                <button style="background: var(--accent-orange); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                    Generate Summary (English)
+                </button>
+                
+                <!-- Summary Output -->
+                <div style="margin-top: 12px; padding: 12px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; white-space: pre-wrap; color: #111827; font-size: 14px;">
+                    Meeting summary will appear here.
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Transcript Popup (hidden by default) -->
+        <div class="transcript-popup" id="transcriptPopup" style="display: none;">
+            <div class="transcript-header">
+                <div class="pulse-dot"></div>
+                Live Translation
+            </div>
+            <p style="white-space: pre-wrap; min-height: 32px; color: #f3f4f6; margin: 0 0 12px 0;">
+                🎤 Listening for speech in any language...
+            </p>
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #4b5563;">
+                <label style="color: #9ca3af; font-size: 12px;">Translate to:</label>
+                <select style="margin-left: 8px; background: #374151; color: white; border-radius: 4px; padding: 4px 8px; font-size: 12px; border: 1px solid #4b5563;">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="vi">🇻🇳 Tiếng Việt</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ko">🇰🇷 한국어</option>
+                    <option value="zh">🇨🇳 中文</option>
+                </select>
+            </div>
+            <div style="margin-top: 8px; font-size: 12px; color: #9ca3af;">
+                Supports mixed English + Vietnamese speech
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Basic interactivity for demonstration
+        const globeButton = document.getElementById('globeButton');
+        const menuPopup = document.getElementById('menuPopup');
+        const panelOverlay = document.getElementById('panelOverlay');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const notesBtn = document.getElementById('notesBtn');
+        const closePanel = document.getElementById('closePanel');
+        const transcriptPopup = document.getElementById('transcriptPopup');
+        const redDot = document.getElementById('redDot');
+
+        let isMenuOpen = false;
+        let isListening = false;
+
+        // Toggle menu
+        globeButton.addEventListener('click', () => {
+            isMenuOpen = !isMenuOpen;
+            menuPopup.style.display = isMenuOpen ? 'flex' : 'none';
+        });
+
+        // Show settings panel
+        settingsBtn.addEventListener('click', () => {
+            panelOverlay.style.display = 'block';
+            menuPopup.style.display = 'none';
+            isMenuOpen = false;
+        });
+
+        // Show notes panel / toggle listening
+        notesBtn.addEventListener('click', () => {
+            isListening = !isListening;
+            transcriptPopup.style.display = isListening ? 'block' : 'none';
+            redDot.style.display = isListening ? 'block' : 'none';
+            globeButton.classList.toggle('listening', isListening);
+            menuPopup.style.display = 'none';
+            isMenuOpen = false;
+        });
+
+        // Close panel
+        closePanel.addEventListener('click', () => {
+            panelOverlay.style.display = 'none';
+        });
+
+        // Close panel when clicking overlay
+        panelOverlay.addEventListener('click', (e) => {
+            if (e.target === panelOverlay) {
+                panelOverlay.style.display = 'none';
+            }
+        });
+
+        // Auto-close menu after 4 seconds
+        globeButton.addEventListener('click', () => {
+            if (isMenuOpen) {
+                setTimeout(() => {
+                    if (isMenuOpen) {
+                        menuPopup.style.display = 'none';
+                        isMenuOpen = false;
+                    }
+                }, 4000);
+            }
+        });
+    </script>
+</body>
+</html>

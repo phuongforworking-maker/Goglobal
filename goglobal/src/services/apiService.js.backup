@@ -1,0 +1,154 @@
+
+import axios from 'axios';
+
+// 1. Load keys from the secure .env file
+const TRANSLATOR_KEY = import.meta.env.VITE_AZURE_TRANSLATOR_KEY; 
+const AZURE_REGION = import.meta.env.VITE_AZURE_REGION; 
+const PROMPT_KEY = import.meta.env.VITE_PROMPT_API_KEY; 
+const SUMMARIZER_KEY = import.meta.env.VITE_SUMMARIZER_API_KEY; 
+
+// 2. Define API Base URLs
+const TRANSLATOR_BASE_URL = 'https://api.cognitive.microsofttranslator.com/';
+const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/'; 
+
+// ----------------------------------------------------
+// 1. TRANSLATOR API (Azure) - Includes Language Detection
+// ----------------------------------------------------
+
+/**
+ * Detects the source language and translates text to the target language.
+ * @param {string} text The input text to translate.
+ * @param {string} targetLang The desired output language code (e.g., 'es').
+ * @returns {Promise<{translatedText: string, detectedLang: string}>}
+ */
+export async function detectAndTranslate(text, targetLang) {
+    if (!TRANSLATOR_KEY) {
+        throw new Error("Translator API Key is missing. Check your .env file.");
+    }
+    
+    // Azure performs detection and translation in one API call
+    const url = `${TRANSLATOR_BASE_URL}translate?api-version=3.0&to=${targetLang}`;
+    
+    try {
+        const response = await axios.post(url, 
+            [{ 'Text': text }], 
+            {
+                headers: {
+                    'Ocp-Apim-Subscription-Key': TRANSLATOR_KEY,
+                    'Ocp-Apim-Subscription-Region': AZURE_REGION,
+                    'Content-type': 'application/json',
+                }
+            }
+        );
+        
+        // Extract translation and detected source language from the response
+        const translation = response.data[0].translations[0].text;
+        const detectedSource = response.data[0].detectedLanguage.language;
+
+        return { translatedText: translation, detectedLang: detectedSource };
+
+    } catch (error) {
+        console.error("Translation API Error:", error.response ? error.response.data : error.message);
+        throw new Error("Translation service failed. Check API Key, Endpoint URL, and network connection.");
+    }
+}
+
+// ----------------------------------------------------
+// 2. PROMPT API (GEMINI)
+// ----------------------------------------------------
+
+export async function getClarificationPrompt(ambiguousText) {
+    if (!PROMPT_KEY) {
+        throw new Error("Prompt API Key (Gemini) is missing.");
+    }
+    const model = 'gemini-2.5-flash:generateContent'; 
+    const url = `${GEMINI_BASE_URL}${model}?key=${PROMPT_KEY}`;
+    const promptContent = `The following text was transcribed from a meeting: "${ambiguousText}". Generate a short, single-sentence question to clarify the speaker's intent, such as "Did you mean the fiscal year or the calendar year?"`;
+    
+    try {
+        const response = await axios.post(url, {
+            contents: [{ role: "user", parts: [{ text: promptContent }] }]
+        });
+        return response.data.candidates[0].content.parts[0].text.trim();
+    } catch (error) {
+        console.error("Prompt API Error:", error.response ? error.response.data : error.message);
+        return "Could not generate clarification prompt.";
+    }
+}
+
+// ----------------------------------------------------
+// 3. SUMMARIZER API (GEMINI)
+// ----------------------------------------------------
+
+export async function getMeetingSummary(fullTranscript, summaryLang = 'English') {
+    if (!SUMMARIZER_KEY) {
+        throw new Error("Summarizer API Key (Gemini) is missing.");
+    }
+    const model = 'gemini-2.5-flash:generateContent';
+    const url = `${GEMINI_BASE_URL}${model}?key=${SUMMARIZER_KEY}`;
+    const promptContent = `Summarize the following meeting transcript in ${summaryLang}. Focus on key decisions and action items. Transcript: ${fullTranscript}`;
+
+    try {
+        const response = await axios.post(url, {
+            contents: [{ role: "user", parts: [{ text: promptContent }] }]
+        });
+        return response.data.candidates[0].content.parts[0].text.trim();
+    } catch (error) {
+        console.error("Summarizer API Error:", error.response ? error.response.data : error.message);
+        return "Could not generate meeting summary.";
+    }
+}
+
+// ----------------------------------------------------
+// 4. TEXT-TO-SPEECH (Browser Native)
+// ----------------------------------------------------
+
+/**
+ * Speaks the provided text using the browser's native Web Speech API.
+ * @param {string} text The text to be spoken.
+ * @param {string} lang The language code (e.g., 'es', 'fr', 'en-US') for voice selection.
+ */
+export function speakText(text, lang) {
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang; 
+        
+        // Force the browser to refresh the list of available voices
+        const voices = window.speechSynthesis.getVoices();
+        
+        // Be robust: try to match the language code (e.g., 'es') with available voices (e.g., 'es-ES')
+        const targetVoice = voices.find(voice => 
+            voice.lang.toLowerCase().startsWith(lang.toLowerCase())
+        );
+        
+        // If a specific voice is found, use it; otherwise, let the browser default (which often fails)
+        if (targetVoice) {
+            utterance.voice = targetVoice;
+        }
+
+        // Add a safety timeout to ensure voices are loaded before speaking (a common TTS bug)
+        if (voices.length === 0) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                const retryVoice = window.speechSynthesis.getVoices().find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+                if (retryVoice) {
+                    utterance.voice = retryVoice;
+                }
+                window.speechSynthesis.speak(utterance);
+            };
+        } else {
+            window.speechSynthesis.speak(utterance);
+        }
+    } else {
+        console.warn("Text-to-Speech not supported in this browser.");
+    }
+}
+```
+
+### Step 2: Update `App.jsx` Language List
+
+We need to update the list of available languages in `App.jsx` to reflect the languages you selected (Mandarin, Korean, Japanese, Spanish, French, English).
+
+**Action:** Open **`src/App.jsx`** and find the `availableLanguages` definition near the top. Replace it with the list below.
+
+```javascript
+[Immersive content redacted for brevity.]
