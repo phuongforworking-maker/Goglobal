@@ -7,8 +7,9 @@ services:
     name: goglobal-static
     env: node
     branch: main
-    buildCommand: npm install && npm run build
-    publishPath: dist
+    # The project lives in the `goglobal/` subfolder. Run build there.
+    buildCommand: cd goglobal && npm install && npm run build
+    publishPath: goglobal/dist
     plan: free
     # Environment variables (set these in the Render dashboard, not here):
     # VITE_AZURE_TRANSLATOR_KEY
@@ -20,8 +21,9 @@ services:
     env: node
     branch: main
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run start:server
+    # Backend service also lives under `goglobal/`.
+    buildCommand: cd goglobal && npm install
+    startCommand: cd goglobal && npm run start:server
     envVars:
       # Set these on Render (do NOT put secrets in this file)
       # AZURE_TRANSLATOR_KEY: ''
