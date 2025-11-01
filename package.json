@@ -1,0 +1,9 @@
+{
+  "name": "goglobal-monorepo-root",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "cd goglobal && npm install && npm run build",
+    "start": "cd goglobal && npm run start"
+  }
+}

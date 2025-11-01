@@ -14,6 +14,9 @@ import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
 
+const path = require('path');
+const fs = require('fs');
+
 const app = express();
 const port = process.env.PORT || 5175;
 
@@ -104,6 +107,31 @@ app.post('/api/speech', async (req, res) => {
   // for production-grade speech-to-text (large audio files, chunking, etc.).
   return res.status(501).json({ error: 'Speech proxy not implemented. Use client-side Web Speech API or extend server.' });
 });
+
+// Serve static frontend if present (supports deploying frontend and backend on same service)
+// Looks for a `dist` folder in the current working directory (where the backend runs).
+try {
+  const distPath = path.join(process.cwd(), 'dist');
+  const indexHtml = path.join(distPath, 'index.html');
+
+  if (fs.existsSync(indexHtml)) {
+    app.use(express.static(distPath));
+
+    // Serve index.html for any non-API route (SPA fallback)
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/')) return next();
+      res.sendFile(indexHtml);
+    });
+    console.log('Static frontend detected. Serving files from', distPath);
+  } else {
+    // Basic root route when no frontend is present
+    app.get('/', (_req, res) => {
+      res.json({ ok: true, message: 'Goglobal API proxy is running. Frontend not found on server.' });
+    });
+  }
+} catch (err) {
+  console.warn('Error setting up static file serving:', err?.message || err);
+}
 
 app.listen(port, () => {
   console.log(`Goglobal API proxy running on http://localhost:${port}`);
